@@ -7,9 +7,9 @@ RUN apt-get update && \
 
 RUN pip3 install pytest==8.0.0 requests flask geopy xmltodict
 
-COPY iss_tracker /Jacob_Hands_ISS_TRACKER/iss_tracker
+COPY iss_tracker /Jacob_Hands_ISS_TRACKER/iss_tracker.py
 
 RUN chmod +rx /Jacob_Hands_ISS_TRACKER/iss_tracker.py
-RUN chmod +rx /Jacob_Hands_ISS_TRACKER/test_iss_tracker.py
 
-ENV PATH="/code:$PATH"
+
+ENV PATH="/Jacob_Hands_ISS_TRACKER:$PATH"
