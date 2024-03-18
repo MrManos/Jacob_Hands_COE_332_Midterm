@@ -38,7 +38,7 @@ iss_data = get_data()
 def keys() -> list:   
     """
     Goes throguh the keys 
-    Goes thrrough all the keys in the data set to find which one epochs is under. 
+    
     Returns: 
         list1 (list): returns a list of keys associated with the xml data
         list2 (list): returns a list of keys associated with the "ndm" key
