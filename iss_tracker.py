@@ -4,6 +4,7 @@ import requests
 import xmltodict
 import math
 import logging
+import time
 from datetime import datetime 
 from flask import Flask, request
 from geopy.geocoders import Nominatim 
@@ -372,7 +373,43 @@ def location(epoch: list) -> dict:
         return location
     except TypeError: 
         return "Make sure epoch ID is correct or the data was deleted\n" 
-    
+
+@app.route('/now', methods = ['GET'])
+def now() -> dict:
+    """
+    The route returns the closest epoch at the current time 
+
+    Args: 
+        None
+    Returns: 
+        now (dict): This dictionary contains the ID for the closest epoch, it's geogrpahical location, and 
+                    its speed and how many seconds it is away from now 
+
+    """
+    try: 
+        time_now = time.time()
+        epochs_data = get_epochs() 
+        time_epoch = time.mktime(time.strptime(epochs_data[0][:-5], '%Y-%jT%H:%M:%S'))
+        minimum = time_now - time_epoch 
+ 
+        for epoch in epochs_data:
+            time_epoch = time.mktime(time.strptime(epoch[:-5], '%Y-%jT%H:%M:%S'))
+            diff = time_now - time_epoch
+            if abs(diff) < abs(minimum):  
+                minimum = diff 
+                closest_epoch = epoch 
+                          
+
+        now = {} 
+        now['closest_epoch'] = closest_epoch 
+        now['seconds_from_now'] = minimum  
+        now['location'] = location(closest_epoch)
+        now['speed'] = get_speed(closest_epoch) 
+
+        return now 
+    except ValueError: 
+        return "The data was deleted\n" 
+
 
 
 @app.route('/now', methods = ["GET"])
