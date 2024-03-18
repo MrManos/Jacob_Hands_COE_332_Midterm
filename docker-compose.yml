@@ -1,11 +1,10 @@
----
 version: "3"
 
 services:
-        flask-app:
-                build:
-                        context: ./
-                        dockerfile: ./Dockerfile
-                image: MrManos/iss_tracker:midterm
-                ports: 
-                      - 5000:5000      
+  flask-app:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    image: mrmanos/iss_tracker
+    ports:
+      - 5000:5000
