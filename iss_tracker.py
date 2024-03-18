@@ -1,79 +1,27 @@
-#!/usr/bin/env python3
-import sys
-import requests
+from flask import Flask, request 
 import xmltodict
-import math
-import logging
+import requests
+import math  
 import time
-from datetime import datetime 
-from flask import Flask, request
 from geopy.geocoders import Nominatim 
+
 
 app = Flask(__name__)
 
-
-
 def get_data() -> list:
     """
-    Gets the data from the NASA website for the ISS trejectories 
-
-    Args: 
-        No args for this function 
-    
-    Returns: 
         data (list): The data from the ISS trajectory xml 
-
     """
     r = requests.get("https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml")
+    ## Successful status code 
     if r.status_code == 200:
         data = xmltodict.parse(r.text)
         return data
-
-@app.route('/delete-data', methods=['DELETE'])
-def delete() -> str:
-    """
-    Deletes all the data from the iss_data set
-
-    Args: 
-        No args 
-
-    Returns: 
-        (str): A string that says deleted to show the data has been deleted
-
-    """
-    global iss_data
-    iss_data.clear()
-
-    return "Deleted \n"
-
-
-@app.route('/post-data', methods=['POST'])
-def post() -> str:
-    """
-    Deletes all the data from the iss_data set
-
-    Args:
-        No args
-
-    Returns:
-        (str): A string that says "data posted" to show the data has been deleted
-
-    """
-    global iss_data
-    iss_data = get_data()    
-    return "data posted\n"   
-
-#Global variable called iss_data 
-iss_data = get_data()
+ 
 
 @app.route('/', methods=['GET']) 
 def data() -> list:  
     """
-    Gets the ISS Trajectory data from the NASA website. 
-
-    Args: 
-        No args for this function.
-
     Returns: 
         iss_data (dict): The dictionary of the data that was imported using the requests library, the imported data was an 
         xml file. 
@@ -83,204 +31,155 @@ def data() -> list:
     else:
         return iss_data 
 
-
-
-def calculate_speed(x_dot, y_dot, z_dot) -> float:
+@app.route('/keys', methods=['GET'])
+def keys() -> list:   
     """
-    calculates the speed
-    inputs:
-         x_dot (float)
-         y_dot (float)
-         z_dot (float)
-    return:
-         calculates speed (float)
+    Goes throguh the keys 
+    Goes thrrough all the keys in the data set to find which one epochs is under. 
+    Returns: 
+        list1 (list): returns a list of keys associated with the xml data
+        list2 (list): returns a list of keys associated with the "ndm" key
+        list3 (list): returns a list of keys associated with the "oem" key
+        list4 (list): returns a list of keys associated with the "body" key
+        list5 (list): returns a list of keys associated with the "segment" key
+        list6 (list): returns a list of keys associated with the "data" key
+        list7 (list): returns the epochs and the values associated with it using the stateVector key. 
     """
-    if type(x_dot) == str:
-        x_dot = float(x_dot)
-        y_dot = float(y_dot)
-        z_dot = float(z_dot)
-        
-    logging.info(f"Calculated speed: {math.sqrt(x_dot**2 + y_dot**2 + z_dot**2):.2f} km/s")
-    return math.sqrt(x_dot**2 + y_dot**2 + z_dot**2)
 
-##calculates the average speed
-def average_speed(data) -> float:
-
-    """
-    Function calculates the average speed
-    Args:
-         data = dictonary : the data
-
-    return: 
-       the average speed (float)
-    """
+    key_data = data() 
     
-    total_speed = 0.0
-    for entry in data:
-        ##defines the x,y,z,velocity vectors
-        x_dot = entry['X_DOT']['#text']
-        y_dot = entry['Y_DOT']['#text']
-        z_dot = entry['Z_DOT']['#text']
-        total_speed += calculate_speed(x_dot, y_dot, z_dot)
-    
-    num_entries = len(data)
-    logging.info(f"Average speed: {total_speed / num_entries:.2f} km/s")
-    return total_speed / num_entries
-
-@app.route('/epochs/<epoch>/speed', methods=['GET'])
-def get_speed(epoch) -> str:
-    '''
-    returns the speed of a specific state vecor
-    '''
-    # Parse the response content
-    response = requests.get(url='https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml')
-    data = xmltodict.parse(response.content)
-    sub_data = data['ndm']['oem']['body']['segment']['data']['stateVector']
-
-    # Find the matching epoch
     try:
-        for entry in sub_data:
-            if entry['EPOCH'] == epoch:
-                # Extract velocity components
-                x_dot = float(entry['X_DOT']['#text'])
-                y_dot = float(entry['Y_DOT']['#text'])
-                z_dot = float(entry['Z_DOT']['#text'])
-
-                # Calculate and return speed
-                speed = calculate_speed(x_dot, y_dot, z_dot)
-                return {'speed': speed}
-    except TypeError: 
+        list1 = list(key_data.keys())
+        # return list1
+        list2 = list(key_data['ndm'].keys()) 
+        #return list2 
+        list3 = list(key_data['ndm']['oem'].keys())
+        #return list3
+        list4 = list(key_data['ndm']['oem']['body'].keys())
+        #return list4
+        list5 = list(key_data['ndm']['oem']['body']['segment'].keys())
+        #return list5
+        list6 = list(key_data['ndm']['oem']['body']['segment']['data'].keys())
+        #return list6
+        list7 = list(key_data['ndm']['oem']['body']['segment']['data']['stateVector'])
+        return list7
+    except AttributeError: 
         return "Data has been deleted\n" 
 
-    # If no matching epoch is found, return an error message
-    return {'error': 'Epoch not found'}, 404
+@app.route('/epochs', methods=['GET']) 
+def epochs()->  list:  
+    """
+    Returns the epochs in the dictionary 
+    Returns: 
+        epochs (list): returns all epochs associated in the dictionary
+    """    
+    epochs = keys()  
+    
+    ## obtains the offset and limit when given in the curl 
+    offset = request.args.get('offset',0)
+    if offset: 
+        try: 
+            offset = int(offset)
+        except ValueError: 
+            return "Invalid start parameter; start must be an integer. \n"
+    limit = request.args.get('limit', len(epochs)) 
+    if limit: 
+        try: 
+            limit = int(limit)
+        except ValueError: 
+            return "Invalid start parameter; start must be an integer. \n" 
+    if limit > len(epochs) or offset > len(epochs) or offset < 0 or limit < 0:
+        return "Change query paramater \n"
+
+    counter = 0 
+    result = [] 
+    for d in range(len(epochs)): 
+        if counter == limit: 
+            break 
+        if d >= offset:
+            try: 
+                result.append(epochs[d]['EPOCH'])
+                counter = counter + 1
+            except TypeError: 
+                return "Data has been deleted\n" 
+    return result   
+
 
 @app.route('/epochs/<epoch>', methods=['GET'])
-def get_state_vectors(epoch) -> str:
-    '''
-    Returns the specific state vector provided
-    '''
-    # Parse the response content
-    response = requests.get(url='https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml')
-    data = xmltodict.parse(response.content)
-    sub_data = data['ndm']['oem']['body']['segment']['data']['stateVector']
+def get_specific_epoch(epoch: str) -> list:
+    """
+    Returns the single epoch when provided 
+    
+    Args: 
+        epoch (string): The specific EPOCH procided by the user 
 
-    # Find the matching epoch
-    try:
-        for entry in sub_data:
-            if entry['EPOCH'] == epoch:
-                # Extract state vectors
-                x = float(entry['X']['#text'])
-                y = float(entry['Y']['#text'])
-                z = float(entry['Z']['#text'])
-                x_dot = float(entry['X_DOT']['#text'])
-                y_dot = float(entry['Y_DOT']['#text'])
-                z_dot = float(entry['Z_DOT']['#text'])
+    Returns: 
+        Specific_Epoch (list): The state vectors associated with the epoch
 
-                # Return state vectors
-                return {'x': x, 'y': y, 'z': z, 'x_dot': x_dot, 'y_dot': y_dot, 'z_dot': z_dot}
+    """  
+    try:     
+        epochs = keys()
+        specific_epoch = [] 
+        for i in range(len(epochs)): 
+            if epoch == str(epochs[i]['EPOCH']):
+                specific_epoch = epochs[i] 
+                return  specific_epoch  
+        if specific_epoch == []: 
+            return "Please enter a valid epoch ID\n" 
     except TypeError: 
         return "Data has been deleted\n" 
-    # If no matching epoch is found, return an error message
-    return {'error': 'Epoch not found'}, 404
+    
+     
 
-@app.route('/epochs', methods=['GET'])
-def get_epochs() -> list:
-    '''
-    will return the limit of the users input
-    '''
-    # Parse the response content
-    response = requests.get(url='https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml')
-    data = xmltodict.parse(response.content)
-    sub_data = data['ndm']['oem']['body']['segment']['data']['stateVector']
+@app.route('/epochs/<epoch>/speed', methods=['GET'])
+def get_speed(epoch: list) -> dict:
+    """
+    Returns the instantaneous speed of a specific epoch 
 
-    # Get the 'limit' and 'offset' query parameters
-    limit = request.args.get('limit', default=len(sub_data), type=int)
-    offset = request.args.get('offset', default=0, type=int)
+    Args: 
+        epoch (string): The specific EPOCH
 
-    # Validate the 'limit' and 'offset' query parameters
-    if limit < 0 or offset < 0:
-        return {'error': 'Invalid query parameters'}, 400
+    Returns: 
+        awnser (f string): Returns the insatntaneous speed in an F string with the message "The speed of 
+        the epoch is:"  
+    """
+    try: 
+        Specific_Epoch = get_specific_epoch(epoch) 
 
-    # Get the list of epochs based on the 'limit' and 'offset' query parameters
-    epochs = [entry['EPOCH'] for entry in sub_data[offset:offset+limit]]
+        x_dot = float(Specific_Epoch['X_DOT']['#text'])
+        y_dot = float(Specific_Epoch['Y_DOT']['#text'])
+        z_dot = float(Specific_Epoch['Z_DOT']['#text']) 
 
-    # Return the list of epochs
-    return {'epochs': epochs}
+        speed = math.sqrt(x_dot**2+y_dot**2+z_dot**2)
 
-@app.route('/epochs', methods=['GET'])
-def get_data()-> list:
-    '''
-    returns the enitre data
-    '''
-    # Parse the response content
-    response = requests.get(url='https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml')
-    data = xmltodict.parse(response.content)
-    sub_data = data['ndm']['oem']['body']['segment']['data']['stateVector']
-
-    # Convert the data to a list of dictionaries
-    try:
-        data_list = []
-        for entry in sub_data:
-            data_dict = {
-                'epoch': entry['EPOCH'],
-                'x': float(entry['X']['#text']),
-                'y': float(entry['Y']['#text']),
-                'z': float(entry['Z']['#text']),
-                'x_dot': float(entry['X_DOT']['#text']),
-                'y_dot': float(entry['Y_DOT']['#text']),
-                'z_dot': float(entry['Z_DOT']['#text']),
-            }
-            data_list.append(data_dict)
-
-        # Return the entire data set
-        return {'data': data_list}
+        awnser = {'value': speed, 'units': "km/s" }
+        return awnser
     except TypeError: 
-        return "Data has been deleted\n" 
- 
+        return "Data has been deleted or try changing the epoch id\n" 
+
 @app.route('/comment', methods=['GET'])
 def comment() -> list:
     """
     Gives the comments that are associated with the data set 
+
     Returns: 
-        list_of_comments (list): The comments associated with the data set as a list
-        (str): A string that says data deleted if command is called after the data has been deleted
+        comments_list (list): returns the comments header as a list
     
     """
     try:
-        comment_data = data()
-        list_of_comments = list(comment_data['ndm']['oem']['body']['segment']['data']['COMMENT'])
-        return list_of_comments
+        comments = data()
+        comments_list = list(comments['ndm']['oem']['body']['segment']['data']['COMMENT'])
+        return comments_list
     except TypeError: 
         return "Data has been deleted\n" 
 
-@app.route('/metadata', methods=['GET'])
-def metadata() -> dict:
-    """
-    Gives the metadata that is associated with the data set
-
-    Args:
-        None
-    Returns:
-        meta (dict): The metadata associated with the data set as a dictionary
-        (str): A string that says data deleted if command is called after the data has been deleted
-    """
-    try: 
-        metadata = data() 
-        meta = metadata['ndm']['oem']['body']['segment']['metadata'] 
-        return meta
-    except TypeError: 
-        return "Data was deleted\n" 
- 
 @app.route('/header', methods=['GET'])
 def header() -> dict:
     """
-    Gives the header that is associated with the data set
-    Args:
-        Non
+    Returns the headers as a dict 
+
     Returns:
-        header (dict): The header associated with the data set as a dictioanry  
-        (str): A string that says data deleted if command is called after the data has been deleted
+        header (dict): The header values as a dict 
     """
     try:
         header_data = data() 
@@ -289,108 +188,96 @@ def header() -> dict:
     except TypeError: 
         return "Data has been deleted\n" 
 
+@app.route('/metadata', methods=['GET'])
+def metadata() -> dict:
+    """
+    Returns the metadata
 
-@app.route('/epochs/<string:epoch>/location', methods=['GET'])
+    Returns:
+        meta (dict): The metadata as a dictionary
+    """
+    try: 
+        metadata = data() 
+        meta = metadata['ndm']['oem']['body']['segment']['metadata'] 
+        return meta
+    except TypeError: 
+        return "Data was deleted\n" 
+
+
+@app.route('/epochs/<epoch>/location', methods=['GET'])
 def location(epoch: list) -> dict:
+    """
+    This route finds the location of a given epoch 
+
+    Args: 
+        epoch (list): The single epoch and all values associated with it
+
+    Returns: 
+        location (dict): A dictionary with latitude, longitude, altitude with its units, and its
+                         geopostion for the epoch specified. 
+
+    """
     try:
-        MEAN_EARTH_RADIUS = 6371  # km
+        MEAN_EARTH_RADIUS = 6371 #km 
 
-        the_epoch = get_state_vectors(epoch)
-        units = "km"
+        the_epoch = get_specific_epoch(epoch)
+        units = "km" 
 
-        x = the_epoch['x']
-        y = the_epoch['y']
-        z = the_epoch['z']
-
-        lat = math.degrees(math.atan2(z, math.sqrt(x**2 + y**2)))
-        lon = math.degrees(math.atan2(y, x))
+        x = float(the_epoch['X']['#text']) 
+        y = float(the_epoch['Y']['#text'])
+        z = float(the_epoch['Z']['#text'])
+   
+        hrs = float(the_epoch['EPOCH'][9:11])
+        mins = float(the_epoch['EPOCH'][12:14]) 
+     
+        lat = math.degrees(math.atan2(z, math.sqrt(x**2 + y**2))) 
+        lon = math.degrees(math.atan2(y,x)) - ((hrs-12)+(mins/60))*(360/24) + 32
         alt = math.sqrt(x**2 + y**2 + z**2) - MEAN_EARTH_RADIUS
+        
+        if abs(lon) > 180: 
+            if lon > 0: 
+                lon = lon-180
+                lon = 180-lon
+            else: 
+                lon = lon+180
+                lon = 180+lon  
 
-        if abs(lon) > 180:
-            lon = (lon + 180) % 360 - 180
-
+        ## nominatim: allows developers to convert human-readable addresses into precise geographic coordinates and vice versa (chatgpt response)
         geocoder = Nominatim(user_agent='iss_tracker')
-        geoloc = geocoder.reverse((lat, lon), zoom=15, language='en')
+        ## reverses the geocoder
+        geoloc = geocoder.reverse((lat,lon), zoom=15, language='en') 
 
-        if geoloc is None:
+        if geoloc == None: 
             position = 'ISS is over the Ocean'
-        else:
-            position = {'Address': geoloc.address}
+        else: 
+            position = {'Address': geoloc.address} 
 
-        location = {
-            'latitude': lat,
-            'longitude': lon,
-            'altitude': {'value': alt, 'units': units},
-            'geo': position
-        }
-
+        ## Returns the location as a string
+        location = {'latitude': lat, 'longitude': lon, 'altitude': {'value': alt,  'units': units}, 'geo': position }  
         return location
-
-    except TypeError:
-        return "Make sure epoch ID is correct or the data was deleted"
+    except TypeError: 
+        return "Make sure epoch ID is correct or the data was deleted\n" 
     
-# @app.route('/now', methods=['GET'])
-# def get_now() -> str:
-#     '''
-#     return the velocity now
-#     '''
-#     response = requests.get(url='https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml')
-    
-#     data = xmltodict.parse(response.content)
 
-#     sub_data = data['ndm']['oem']['body']['segment']['data']['stateVector']
-#     # Parse the response content
-#     current_time = datetime.now()
-#     logging.info(f"Current timestamp: {current_time}")
-
-#     # Find the closest epoch (state vector) based on the current time
-#     closest_epoch = None
-#     closest_time_diff = float('inf')  # Initialize with a large value
-#     velocity_now = None
-#     for bob in sub_data:
-#         timestamp_str = bob['EPOCH']
-#         timestamp_format = "%Y-%jT%H:%M:%S.%fZ"
-#         timestamp_dt = datetime.strptime(timestamp_str, timestamp_format)
-#         ### need to add time to catch up to UTC
-#         time_diff = abs((current_time - timestamp_dt).total_seconds() + 21600) 
-#         if time_diff < closest_time_diff:
-#             closest_time_diff = time_diff
-#             velocity_now = bob
-#             closest_epoch = bob['EPOCH']
-
-#     # Extract velocity components for the closest epoch
-#     x_dot_now = float(velocity_now['X_DOT']['#text'])
-#     y_dot_now = float(velocity_now['Y_DOT']['#text'])
-#     z_dot_now = float(velocity_now['Z_DOT']['#text'])
-
-#     # Calculate speed "now"
-#     speed_now = calculate_speed(x_dot_now, y_dot_now, z_dot_now)
-    
-#     return(f"Speed 'now': {speed_now:.2f} km/s and the closest time now is {closest_epoch}")
- 
 
 @app.route('/now', methods = ['GET'])
 def now() -> dict:
     """
-    The route returns the closest epoch at the current time 
+    The route returns the closest epoch at the current time with all the geodata and speed
 
-    Args: 
-        None
     Returns: 
-        now (dict): This dictionary contains the ID for the closest epoch, it's geogrpahical location, and 
-                    its speed and how many seconds it is away from now 
+        now (dict): Contains the geolocation of the  
 
     """
     try: 
-        time_now = time.time()
-        epochs_data = get_epochs() 
-        time_epoch = time.mktime(time.strptime(
-            epochs_data[0][:-5], '%Y-%jT%H:%M:%S'))
-        minimum = time_now - time_epoch 
+        current_time = time.time()
+        epoch_data = epochs() 
+        time_epoch = time.mktime(time.strptime(epoch_data[0][:-5], '%Y-%jT%H:%M:%S'))
+        minimum = current_time - time_epoch 
  
-        for epoch in epochs_data:
+        for epoch in epoch_data:
             time_epoch = time.mktime(time.strptime(epoch[:-5], '%Y-%jT%H:%M:%S'))
-            diff = time_now - time_epoch
+            diff = current_time - time_epoch
             if abs(diff) < abs(minimum):  
                 minimum = diff 
                 closest_epoch = epoch 
@@ -407,61 +294,5 @@ def now() -> dict:
         return "The data was deleted\n" 
 
 
-
-# @app.route('/now', methods = ["GET"])
-# def main():
-
-#     response = requests.get(url='https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml')
-    
-#     data = xmltodict.parse(response.content)
-
-#     sub_data = data['ndm']['oem']['body']['segment']['data']['stateVector']
-#     print(data['ndm']['oem']['body']['segment']['data']['stateVector'][44]['EPOCH'])
-#     for entry in sub_data:
-#         print(entry)
-#         print(entry['X_DOT'])
-#         print(entry['X_DOT']['#text'])
-#         break
-    
-#     # Extract timestamps from the first and last epochs
-#     first_epoch = data['ndm']['oem']['body']['segment']['metadata']['START_TIME']
-#     last_epoch = data['ndm']['oem']['body']['segment']['metadata']['STOP_TIME']
-#     print(f"Data range: From {first_epoch} to {last_epoch}")
-    
-    
-    
-#     avg_speed = average_speed(sub_data)
-#     print(f"Average speed of the whole data set: {avg_speed:.2f} km/s")
-
-#     ## Chat gpt helped me with this part: 
-#     current_time = datetime.now()
-#     logging.info(f"Current timestamp: {current_time}")
-
-#     # Find the closest epoch (state vector) based on the current time
-#     closest_epoch = None
-#     closest_time_diff = float('inf')  # Initialize with a large value
-#     velocity_now = None
-#     for bob in sub_data:
-#         timestamp_str = bob['EPOCH']
-#         timestamp_format = "%Y-%jT%H:%M:%S.%fZ"
-#         timestamp_dt = datetime.strptime(timestamp_str, timestamp_format)
-#         ### need to add time to catch up to UTC
-#         time_diff = abs((current_time - timestamp_dt).total_seconds() + 21600) 
-#         if time_diff < closest_time_diff:
-#             closest_time_diff = time_diff
-#             velocity_now = bob
-#             closest_epoch = bob['EPOCH']
-
-#     # Extract velocity components for the closest epoch
-#     x_dot_now = float(velocity_now['X_DOT']['#text'])
-#     y_dot_now = float(velocity_now['Y_DOT']['#text'])
-#     z_dot_now = float(velocity_now['Z_DOT']['#text'])
-
-#     # Calculate speed "now"
-#     speed_now = calculate_speed(x_dot_now, y_dot_now, z_dot_now)
-#     print(f"Speed 'now': {speed_now:.2f} km/s and the closest time now is {closest_epoch}")
-   
-        
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
-    
