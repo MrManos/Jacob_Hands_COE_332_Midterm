@@ -32,7 +32,7 @@ def data() -> list:
         return iss_data 
     
 
-iss_data = data()
+iss_data = get_data()
 
 @app.route('/keys', methods=['GET'])
 def keys() -> list:   
