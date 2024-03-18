@@ -138,16 +138,19 @@ def get_speed(epoch) -> str:
     sub_data = data['ndm']['oem']['body']['segment']['data']['stateVector']
 
     # Find the matching epoch
-    for entry in sub_data:
-        if entry['EPOCH'] == epoch:
-            # Extract velocity components
-            x_dot = float(entry['X_DOT']['#text'])
-            y_dot = float(entry['Y_DOT']['#text'])
-            z_dot = float(entry['Z_DOT']['#text'])
+    try:
+        for entry in sub_data:
+            if entry['EPOCH'] == epoch:
+                # Extract velocity components
+                x_dot = float(entry['X_DOT']['#text'])
+                y_dot = float(entry['Y_DOT']['#text'])
+                z_dot = float(entry['Z_DOT']['#text'])
 
-            # Calculate and return speed
-            speed = calculate_speed(x_dot, y_dot, z_dot)
-            return {'speed': speed}
+                # Calculate and return speed
+                speed = calculate_speed(x_dot, y_dot, z_dot)
+                return {'speed': speed}
+    except TypeError: 
+        return "Data has been deleted\n" 
 
     # If no matching epoch is found, return an error message
     return {'error': 'Epoch not found'}, 404
@@ -163,19 +166,21 @@ def get_state_vectors(epoch) -> str:
     sub_data = data['ndm']['oem']['body']['segment']['data']['stateVector']
 
     # Find the matching epoch
-    for entry in sub_data:
-        if entry['EPOCH'] == epoch:
-            # Extract state vectors
-            x = float(entry['X']['#text'])
-            y = float(entry['Y']['#text'])
-            z = float(entry['Z']['#text'])
-            x_dot = float(entry['X_DOT']['#text'])
-            y_dot = float(entry['Y_DOT']['#text'])
-            z_dot = float(entry['Z_DOT']['#text'])
+    try:
+        for entry in sub_data:
+            if entry['EPOCH'] == epoch:
+                # Extract state vectors
+                x = float(entry['X']['#text'])
+                y = float(entry['Y']['#text'])
+                z = float(entry['Z']['#text'])
+                x_dot = float(entry['X_DOT']['#text'])
+                y_dot = float(entry['Y_DOT']['#text'])
+                z_dot = float(entry['Z_DOT']['#text'])
 
-            # Return state vectors
-            return {'x': x, 'y': y, 'z': z, 'x_dot': x_dot, 'y_dot': y_dot, 'z_dot': z_dot}
-
+                # Return state vectors
+                return {'x': x, 'y': y, 'z': z, 'x_dot': x_dot, 'y_dot': y_dot, 'z_dot': z_dot}
+    except TypeError: 
+        return "Data has been deleted\n" 
     # If no matching epoch is found, return an error message
     return {'error': 'Epoch not found'}, 404
 
@@ -214,60 +219,67 @@ def get_data()-> str:
     sub_data = data['ndm']['oem']['body']['segment']['data']['stateVector']
 
     # Convert the data to a list of dictionaries
-    data_list = []
-    for entry in sub_data:
-        data_dict = {
-            'epoch': entry['EPOCH'],
-            'x': float(entry['X']['#text']),
-            'y': float(entry['Y']['#text']),
-            'z': float(entry['Z']['#text']),
-            'x_dot': float(entry['X_DOT']['#text']),
-            'y_dot': float(entry['Y_DOT']['#text']),
-            'z_dot': float(entry['Z_DOT']['#text']),
-        }
-        data_list.append(data_dict)
+    try:
+        data_list = []
+        for entry in sub_data:
+            data_dict = {
+                'epoch': entry['EPOCH'],
+                'x': float(entry['X']['#text']),
+                'y': float(entry['Y']['#text']),
+                'z': float(entry['Z']['#text']),
+                'x_dot': float(entry['X_DOT']['#text']),
+                'y_dot': float(entry['Y_DOT']['#text']),
+                'z_dot': float(entry['Z_DOT']['#text']),
+            }
+            data_list.append(data_dict)
 
-    # Return the entire data set
-    return {'data': data_list}
-
-
-# @app.route('/now', methods=['GET'])
-# def get_now() -> str:
-#     '''
-#     return the velocity now
-#     '''
-#     response = requests.get(url='https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml')
+        # Return the entire data set
+        return {'data': data_list}
+    except TypeError: 
+        return "Data has been deleted\n" 
     
-#     data = xmltodict.parse(response.content)
 
-#     sub_data = data['ndm']['oem']['body']['segment']['data']['stateVector']
-#     # Parse the response content
-#     current_time = datetime.now()
-#     logging.info(f"Current timestamp: {current_time}")
 
-#     # Find the closest epoch (state vector) based on the current time
-#     closest_epoch = None
-#     closest_time_diff = float('inf')  # Initialize with a large value
-#     velocity_now = None
-#     for bob in sub_data:
-#         timestamp_str = bob['EPOCH']
-#         timestamp_format = "%Y-%jT%H:%M:%S.%fZ"
-#         timestamp_dt = datetime.strptime(timestamp_str, timestamp_format)
-#         ### need to add time to catch up to UTC
-#         time_diff = abs((current_time - timestamp_dt).total_seconds() + 21600) 
-#         if time_diff < closest_time_diff:
-#             closest_time_diff = time_diff
-#             velocity_now = bob
-#             closest_epoch = bob['EPOCH']
+@app.route('/now', methods=['GET'])
+def get_now() -> str:
+    '''
+    return the velocity now
+    '''
+    response = requests.get(url='https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml')
+    
+    data = xmltodict.parse(response.content)
 
-#     # Extract velocity components for the closest epoch
-#     x_dot_now = float(velocity_now['X_DOT']['#text'])
-#     y_dot_now = float(velocity_now['Y_DOT']['#text'])
-#     z_dot_now = float(velocity_now['Z_DOT']['#text'])
+    sub_data = data['ndm']['oem']['body']['segment']['data']['stateVector']
+    # Parse the response content
+    current_time = datetime.now()
+    logging.info(f"Current timestamp: {current_time}")
 
-#     # Calculate speed "now"
-#     speed_now = calculate_speed(x_dot_now, y_dot_now, z_dot_now)
-#     return(f"Speed 'now': {speed_now:.2f} km/s and the closest time now is {closest_epoch}")
+    # Find the closest epoch (state vector) based on the current time
+    closest_epoch = None
+    closest_time_diff = float('inf')  # Initialize with a large value
+    velocity_now = None
+    for bob in sub_data:
+        timestamp_str = bob['EPOCH']
+        timestamp_format = "%Y-%jT%H:%M:%S.%fZ"
+        timestamp_dt = datetime.strptime(timestamp_str, timestamp_format)
+        ### need to add time to catch up to UTC
+        time_diff = abs((current_time - timestamp_dt).total_seconds() + 21600) 
+        if time_diff < closest_time_diff:
+            closest_time_diff = time_diff
+            velocity_now = bob
+            closest_epoch = bob['EPOCH']
+
+    # Extract velocity components for the closest epoch
+    x_dot_now = float(velocity_now['X_DOT']['#text'])
+    y_dot_now = float(velocity_now['Y_DOT']['#text'])
+    z_dot_now = float(velocity_now['Z_DOT']['#text'])
+
+    # Calculate speed "now"
+    speed_now = calculate_speed(x_dot_now, y_dot_now, z_dot_now)
+    
+    
+    
+    return(f"Speed 'now': {speed_now:.2f} km/s and the closest time now is {closest_epoch}")
  
  
  
@@ -325,54 +337,42 @@ def header() -> dict:
 
 @app.route('/epochs/<string:epoch>/location', methods=['GET'])
 def location(epoch: list) -> dict:
-    """
-    This route finds the location of a given epoch 
-
-    Args: 
-        epoch (list): The single epoch and all values associated with it
-        
-    Returns: 
-        location (dict): A dictionary with latitude, longitude, altitude with its units, and its
-                         geopostion for the epoch specified. 
-
-    """
     try:
-        MEAN_EARTH_RADIUS = 6371 #km 
+        MEAN_EARTH_RADIUS = 6371  # km
 
-        the_epoch = get_epochs(epoch)
-        units = "km" 
-        
-        x = float(the_epoch['X']['#text']) 
-        y = float(the_epoch['Y']['#text'])  
-        z = float(the_epoch['Z']['#text'])  
-   
-        hrs = float(the_epoch['EPOCH'][9:11])
-        mins = float(the_epoch['EPOCH'][12:14]) 
-     
-        lat = math.degrees(math.atan2(z, math.sqrt(x**2 + y**2))) 
-        lon = math.degrees(math.atan2(y,x)) - ((hrs-12)+(mins/60))*(360/24) + 32
+        the_epoch = get_state_vectors(epoch)
+        units = "km"
+
+        x = the_epoch['x']
+        y = the_epoch['y']
+        z = the_epoch['z']
+
+        lat = math.degrees(math.atan2(z, math.sqrt(x**2 + y**2)))
+        lon = math.degrees(math.atan2(y, x))
         alt = math.sqrt(x**2 + y**2 + z**2) - MEAN_EARTH_RADIUS
-        
-        if abs(lon) > 180: 
-            if lon > 0: 
-                lon = lon-180
-                lon = 180-lon
-            else: 
-                lon = lon+180
-                lon = 180+lon  
+
+        if abs(lon) > 180:
+            lon = (lon + 180) % 360 - 180
 
         geocoder = Nominatim(user_agent='iss_tracker')
-        geoloc = geocoder.reverse((lat,lon), zoom=15, language='en') 
+        geoloc = geocoder.reverse((lat, lon), zoom=15, language='en')
 
-        if geoloc == None: 
+        if geoloc is None:
             position = 'ISS is over the Ocean'
-        else: 
-            position = {'Address': geoloc.address} 
+        else:
+            position = {'Address': geoloc.address}
 
-        location = {'latitude': lat, 'longitude': lon, 'altitude': {'value': alt,  'units': units}, 'geo': position }  
+        location = {
+            'latitude': lat,
+            'longitude': lon,
+            'altitude': {'value': alt, 'units': units},
+            'geo': position
+        }
+
         return location
-    except TypeError: 
-        return "Make sure epoch ID is correct or the data was deleted\n" 
+
+    except TypeError:
+        return "Make sure epoch ID is correct or the data was deleted"
 
 @app.route('/now', methods = ['GET'])
 def now() -> dict:
@@ -389,7 +389,8 @@ def now() -> dict:
     try: 
         time_now = time.time()
         epochs_data = get_epochs() 
-        time_epoch = time.mktime(time.strptime(epochs_data[0][:-5], '%Y-%jT%H:%M:%S'))
+        time_epoch = time.mktime(time.strptime(
+            epochs_data[0][:-5], '%Y-%jT%H:%M:%S'))
         minimum = time_now - time_epoch 
  
         for epoch in epochs_data:
@@ -412,60 +413,60 @@ def now() -> dict:
 
 
 
-@app.route('/now', methods = ["GET"])
-def main():
+# @app.route('/now', methods = ["GET"])
+# def main():
 
-    response = requests.get(url='https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml')
+#     response = requests.get(url='https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml')
     
-    data = xmltodict.parse(response.content)
+#     data = xmltodict.parse(response.content)
 
-    sub_data = data['ndm']['oem']['body']['segment']['data']['stateVector']
-    print(data['ndm']['oem']['body']['segment']['data']['stateVector'][44]['EPOCH'])
-    for entry in sub_data:
-        print(entry)
-        print(entry['X_DOT'])
-        print(entry['X_DOT']['#text'])
-        break
+#     sub_data = data['ndm']['oem']['body']['segment']['data']['stateVector']
+#     print(data['ndm']['oem']['body']['segment']['data']['stateVector'][44]['EPOCH'])
+#     for entry in sub_data:
+#         print(entry)
+#         print(entry['X_DOT'])
+#         print(entry['X_DOT']['#text'])
+#         break
     
-    # Extract timestamps from the first and last epochs
-    first_epoch = data['ndm']['oem']['body']['segment']['metadata']['START_TIME']
-    last_epoch = data['ndm']['oem']['body']['segment']['metadata']['STOP_TIME']
-    print(f"Data range: From {first_epoch} to {last_epoch}")
+#     # Extract timestamps from the first and last epochs
+#     first_epoch = data['ndm']['oem']['body']['segment']['metadata']['START_TIME']
+#     last_epoch = data['ndm']['oem']['body']['segment']['metadata']['STOP_TIME']
+#     print(f"Data range: From {first_epoch} to {last_epoch}")
     
     
     
-    avg_speed = average_speed(sub_data)
-    print(f"Average speed of the whole data set: {avg_speed:.2f} km/s")
+#     avg_speed = average_speed(sub_data)
+#     print(f"Average speed of the whole data set: {avg_speed:.2f} km/s")
 
-    ## Chat gpt helped me with this part: 
-    current_time = datetime.now()
-    logging.info(f"Current timestamp: {current_time}")
+#     ## Chat gpt helped me with this part: 
+#     current_time = datetime.now()
+#     logging.info(f"Current timestamp: {current_time}")
 
-    # Find the closest epoch (state vector) based on the current time
-    closest_epoch = None
-    closest_time_diff = float('inf')  # Initialize with a large value
-    velocity_now = None
-    for bob in sub_data:
-        timestamp_str = bob['EPOCH']
-        timestamp_format = "%Y-%jT%H:%M:%S.%fZ"
-        timestamp_dt = datetime.strptime(timestamp_str, timestamp_format)
-        ### need to add time to catch up to UTC
-        time_diff = abs((current_time - timestamp_dt).total_seconds() + 21600) 
-        if time_diff < closest_time_diff:
-            closest_time_diff = time_diff
-            velocity_now = bob
-            closest_epoch = bob['EPOCH']
+#     # Find the closest epoch (state vector) based on the current time
+#     closest_epoch = None
+#     closest_time_diff = float('inf')  # Initialize with a large value
+#     velocity_now = None
+#     for bob in sub_data:
+#         timestamp_str = bob['EPOCH']
+#         timestamp_format = "%Y-%jT%H:%M:%S.%fZ"
+#         timestamp_dt = datetime.strptime(timestamp_str, timestamp_format)
+#         ### need to add time to catch up to UTC
+#         time_diff = abs((current_time - timestamp_dt).total_seconds() + 21600) 
+#         if time_diff < closest_time_diff:
+#             closest_time_diff = time_diff
+#             velocity_now = bob
+#             closest_epoch = bob['EPOCH']
 
-    # Extract velocity components for the closest epoch
-    x_dot_now = float(velocity_now['X_DOT']['#text'])
-    y_dot_now = float(velocity_now['Y_DOT']['#text'])
-    z_dot_now = float(velocity_now['Z_DOT']['#text'])
+#     # Extract velocity components for the closest epoch
+#     x_dot_now = float(velocity_now['X_DOT']['#text'])
+#     y_dot_now = float(velocity_now['Y_DOT']['#text'])
+#     z_dot_now = float(velocity_now['Z_DOT']['#text'])
 
-    # Calculate speed "now"
-    speed_now = calculate_speed(x_dot_now, y_dot_now, z_dot_now)
-    print(f"Speed 'now': {speed_now:.2f} km/s and the closest time now is {closest_epoch}")
+#     # Calculate speed "now"
+#     speed_now = calculate_speed(x_dot_now, y_dot_now, z_dot_now)
+#     print(f"Speed 'now': {speed_now:.2f} km/s and the closest time now is {closest_epoch}")
    
         
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
-    main()
+    
