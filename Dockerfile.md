@@ -21,7 +21,7 @@ RUN pip3 install math
 RUN pip3 install time
 RUN pip3 install sys
 
-COPY iss_tracker /Jacob_Hands_ISS_TRACKER/iss_tracker
+COPY iss_tracker /Jacob_Hands_ISS_TRACKER/iss_tracker.py
 
 RUN chmod +rx /Jacob_Hands_ISS_TRACKER/iss_tracker.py
 
