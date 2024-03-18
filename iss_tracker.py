@@ -6,8 +6,83 @@ import math
 import logging
 from datetime import datetime 
 from flask import Flask, request
+from geopy.geocoders import Nominatim 
 
 app = Flask(__name__)
+
+
+
+def get_data() -> list:
+    """
+    Gets the data from the NASA website for the ISS trejectories 
+
+    Args: 
+        No args for this function 
+    
+    Returns: 
+        data (list): The data from the ISS trajectory xml 
+
+    """
+    r = requests.get("https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml")
+    if r.status_code == 200:
+        data = xmltodict.parse(r.text)
+        return data
+
+@app.route('/delete-data', methods=['DELETE'])
+def delete() -> str:
+    """
+    Deletes all the data from the iss_data set
+
+    Args: 
+        No args 
+
+    Returns: 
+        (str): A string that says deleted to show the data has been deleted
+
+    """
+    global iss_data
+    iss_data.clear()
+
+    return "Deleted \n"
+
+
+@app.route('/post-data', methods=['POST'])
+def post() -> str:
+    """
+    Deletes all the data from the iss_data set
+
+    Args:
+        No args
+
+    Returns:
+        (str): A string that says "data posted" to show the data has been deleted
+
+    """
+    global iss_data
+    iss_data = get_data()    
+    return "data posted\n"   
+
+#Global variable called iss_data 
+iss_data = get_data()
+
+@app.route('/', methods=['GET']) 
+def data() -> list:  
+    """
+    Gets the ISS Trajectory data from the NASA website. 
+
+    Args: 
+        No args for this function.
+
+    Returns: 
+        iss_data (dict): The dictionary of the data that was imported using the requests library, the imported data was an 
+        xml file. 
+    """
+    if iss_data == {}: 
+        return "Data has been deleted\n"
+    else:
+        return iss_data 
+
+
 
 def calculate_speed(x_dot, y_dot, z_dot) -> float:
     """
@@ -195,51 +270,109 @@ def get_now() -> str:
  
  
  
-@app.route('/comment', methods = ['GET'])
-def get_comment() -> str:
-    '''
-    returns the given 'comment' list object from the ISS DATA
-    '''
-    response = requests.get(url='https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml')
+@app.route('/comment', methods=['GET'])
+def comment() -> list:
+    """
+    Gives the comments that are associated with the data set 
+    Returns: 
+        list_of_comments (list): The comments associated with the data set as a list
+        (str): A string that says data deleted if command is called after the data has been deleted
     
-    data = xmltodict.parse(response.content)
+    """
+    try:
+        comment_data = data()
+        list_of_comments = list(comment_data['ndm']['oem']['body']['segment']['data']['COMMENT'])
+        return list_of_comments
+    except TypeError: 
+        return "Data has been deleted\n" 
 
-    ## Finds all the headers labeled comment in data 
-    comments = data.findall('.//COMMENT')
-    
-    # Extract the comment text
-    comment_text = [comment.text for comment in comments]
-    
-    # Join the comments into a single string
-    comment_section = '\n'.join(comment_text)
-    
-    return comment_section
+@app.route('/metadata', methods=['GET'])
+def metadata() -> dict:
+    """
+    Gives the metadata that is associated with the data set
 
-
+    Args:
+        None
+    Returns:
+        meta (dict): The metadata associated with the data set as a dictionary
+        (str): A string that says data deleted if command is called after the data has been deleted
+    """
+    try: 
+        metadata = data() 
+        meta = metadata['ndm']['oem']['body']['segment']['metadata'] 
+        return meta
+    except TypeError: 
+        return "Data was deleted\n" 
  
- 
-@app.route('/header', methods = ['GET'])
-def get_header() -> str:
-    '''
-    returns the header dictionary object from the ISS DATA 
-    '''
-    response = requests.get(url='https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml')
+@app.route('/header', methods=['GET'])
+def header() -> dict:
+    """
+    Gives the header that is associated with the data set
+    Args:
+        Non
+    Returns:
+        header (dict): The header associated with the data set as a dictioanry  
+        (str): A string that says data deleted if command is called after the data has been deleted
+    """
+    try:
+        header_data = data() 
+        header = header_data['ndm']['oem']['header'] 
+        return header
+    except TypeError: 
+        return "Data has been deleted\n" 
+
+
+@app.route('/epochs/<string:epoch>/location', methods=['GET'])
+def location(epoch: list) -> dict:
+    """
+    This route finds the location of a given epoch 
+
+    Args: 
+        epoch (list): The single epoch and all values associated with it
+        
+    Returns: 
+        location (dict): A dictionary with latitude, longitude, altitude with its units, and its
+                         geopostion for the epoch specified. 
+
+    """
+    try:
+        MEAN_EARTH_RADIUS = 6371 #km 
+
+        the_epoch = get_epochs(epoch)
+        units = "km" 
+        
+        x = float(the_epoch['X']['#text']) 
+        y = float(the_epoch['Y']['#text'])  
+        z = float(the_epoch['Z']['#text'])  
+   
+        hrs = float(the_epoch['EPOCH'][9:11])
+        mins = float(the_epoch['EPOCH'][12:14]) 
+     
+        lat = math.degrees(math.atan2(z, math.sqrt(x**2 + y**2))) 
+        lon = math.degrees(math.atan2(y,x)) - ((hrs-12)+(mins/60))*(360/24) + 32
+        alt = math.sqrt(x**2 + y**2 + z**2) - MEAN_EARTH_RADIUS
+        
+        if abs(lon) > 180: 
+            if lon > 0: 
+                lon = lon-180
+                lon = 180-lon
+            else: 
+                lon = lon+180
+                lon = 180+lon  
+
+        geocoder = Nominatim(user_agent='iss_tracker')
+        geoloc = geocoder.reverse((lat,lon), zoom=15, language='en') 
+
+        if geoloc == None: 
+            position = 'ISS is over the Ocean'
+        else: 
+            position = {'Address': geoloc.address} 
+
+        location = {'latitude': lat, 'longitude': lon, 'altitude': {'value': alt,  'units': units}, 'geo': position }  
+        return location
+    except TypeError: 
+        return "Make sure epoch ID is correct or the data was deleted\n" 
     
-    data = xmltodict.parse(response.content)
-
-    
-
-
-@app.route('/metadata', methods = ['GET'])
-'''
-returns the metadata dictionary object from the ISS DATA 
-'''
-
-
-@app.route('/epochs/<epoch>/location', methods = ['GET'])
-'''
-route that returns latitude, longitude, altitude, and geoposition for a given <epoch>
-'''
 
 
 @app.route('/now', methods = ["GET"])
