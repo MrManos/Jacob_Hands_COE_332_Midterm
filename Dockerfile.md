@@ -2,14 +2,19 @@ FROM ubuntu:20.04
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y python3 python3-pip && \
-    apt-get install -y python3-requests python3-math python3-time python3-xmltodict python3-flask python3-geopy
+    apt-get install -y python3 python3-pip
 
-RUN pip3 install pytest==8.0.0 requests flask geopy xmltodict
+RUN pip3 install pytest==8.0.0 \
+                 xmltodict==0.13.0 \
+                 requests==2.31.0 \
+                 Flask==3.0.2 \
+                 geopy==2.4.1 \
+                 
 
-COPY iss_tracker /Jacob_Hands_ISS_TRACKER/iss_tracker.py
+WORKDIR /code
 
-RUN chmod +rx /Jacob_Hands_ISS_TRACKER/iss_tracker.py
+COPY iss_tracker.py .
+COPY /test/test_iss_tracker.py .
 
-
-ENV PATH="/Jacob_Hands_ISS_TRACKER:$PATH"
+ENTRYPOINT ["python3"]
+CMD ["iss_tracker.py"]
