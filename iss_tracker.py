@@ -30,6 +30,9 @@ def data() -> list:
         return "Data has been deleted\n"
     else:
         return iss_data 
+    
+
+iss_data = data()
 
 @app.route('/keys', methods=['GET'])
 def keys() -> list:   
