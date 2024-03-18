@@ -34,6 +34,7 @@ def data() -> list:
 @app.route('/keys', methods=['GET'])
 def keys() -> list:   
     """
+    Goes throguh the keys 
     Goes thrrough all the keys in the data set to find which one epochs is under. 
     Returns: 
         list1 (list): returns a list of keys associated with the xml data
@@ -157,38 +158,6 @@ def get_speed(epoch: list) -> dict:
         return "Data has been deleted or try changing the epoch id\n" 
 
 
-
-@app.route('/delete-data', methods=['DELETE'])
-def delete() -> str:
-    """
-    Deletes all the data from the iss_data set
-
-    Args: 
-        No args 
-
-    Returns: 
-        (str): A string that says deleted to show the data has been deleted
-
-    """
-    global iss_data
-    iss_data.clear()
-
-    return "Deleted \n"
-
-# @app.route('/post-data', methods=['POST'])
-# def post() -> str:
-#     """
-#     Deletes all the data from the iss_data set
-
-#     Returns:
-#         (str): A string that says "data posted" to show the data has been deleted
-
-#     """
-#     global iss_data
-#     iss_data = get_data()    
-#     return "data posted\n"   
-
-#Global variable called iss_data 
 iss_data = get_data()
 
 @app.route('/comment', methods=['GET'])
