@@ -231,43 +231,43 @@ def get_data()-> str:
     return {'data': data_list}
 
 
-@app.route('/now', methods=['GET'])
-def get_now() -> str:
-    '''
-    return the velocity now
-    '''
-    response = requests.get(url='https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml')
+# @app.route('/now', methods=['GET'])
+# def get_now() -> str:
+#     '''
+#     return the velocity now
+#     '''
+#     response = requests.get(url='https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml')
     
-    data = xmltodict.parse(response.content)
+#     data = xmltodict.parse(response.content)
 
-    sub_data = data['ndm']['oem']['body']['segment']['data']['stateVector']
-    # Parse the response content
-    current_time = datetime.now()
-    logging.info(f"Current timestamp: {current_time}")
+#     sub_data = data['ndm']['oem']['body']['segment']['data']['stateVector']
+#     # Parse the response content
+#     current_time = datetime.now()
+#     logging.info(f"Current timestamp: {current_time}")
 
-    # Find the closest epoch (state vector) based on the current time
-    closest_epoch = None
-    closest_time_diff = float('inf')  # Initialize with a large value
-    velocity_now = None
-    for bob in sub_data:
-        timestamp_str = bob['EPOCH']
-        timestamp_format = "%Y-%jT%H:%M:%S.%fZ"
-        timestamp_dt = datetime.strptime(timestamp_str, timestamp_format)
-        ### need to add time to catch up to UTC
-        time_diff = abs((current_time - timestamp_dt).total_seconds() + 21600) 
-        if time_diff < closest_time_diff:
-            closest_time_diff = time_diff
-            velocity_now = bob
-            closest_epoch = bob['EPOCH']
+#     # Find the closest epoch (state vector) based on the current time
+#     closest_epoch = None
+#     closest_time_diff = float('inf')  # Initialize with a large value
+#     velocity_now = None
+#     for bob in sub_data:
+#         timestamp_str = bob['EPOCH']
+#         timestamp_format = "%Y-%jT%H:%M:%S.%fZ"
+#         timestamp_dt = datetime.strptime(timestamp_str, timestamp_format)
+#         ### need to add time to catch up to UTC
+#         time_diff = abs((current_time - timestamp_dt).total_seconds() + 21600) 
+#         if time_diff < closest_time_diff:
+#             closest_time_diff = time_diff
+#             velocity_now = bob
+#             closest_epoch = bob['EPOCH']
 
-    # Extract velocity components for the closest epoch
-    x_dot_now = float(velocity_now['X_DOT']['#text'])
-    y_dot_now = float(velocity_now['Y_DOT']['#text'])
-    z_dot_now = float(velocity_now['Z_DOT']['#text'])
+#     # Extract velocity components for the closest epoch
+#     x_dot_now = float(velocity_now['X_DOT']['#text'])
+#     y_dot_now = float(velocity_now['Y_DOT']['#text'])
+#     z_dot_now = float(velocity_now['Z_DOT']['#text'])
 
-    # Calculate speed "now"
-    speed_now = calculate_speed(x_dot_now, y_dot_now, z_dot_now)
-    return(f"Speed 'now': {speed_now:.2f} km/s and the closest time now is {closest_epoch}")
+#     # Calculate speed "now"
+#     speed_now = calculate_speed(x_dot_now, y_dot_now, z_dot_now)
+#     return(f"Speed 'now': {speed_now:.2f} km/s and the closest time now is {closest_epoch}")
  
  
  
