@@ -60,7 +60,7 @@ Once the Docker container is running, you can access various routes in the ISS T
 - **Method**: GET
 - **Description**: Returns information about the closest epoch to the current time, along with the instantaneous speed and geoposition.
 
-![image](files://C:/Users/jacob/Downloads/now_function.png)
+![image](now_function.png)
 #### 4.2. `/epochs`
 
 - **Method**: GET
@@ -70,12 +70,12 @@ Once the Docker container is running, you can access various routes in the ISS T
 
 - **Method**: GET
 - **Description**: Returns a modified list of Epochs given query parameters `limit` and `offset`. It allows you to retrieve a subset of the data.
-
+![epochs](epochs.png)
 #### 4.4. `/epochs/<epoch>`
 
 - **Method**: GET
 - **Description**: Returns state vectors for a specific Epoch from the data set. It provides information about the position and velocity at that particular epoch.
-
+![specific_epoch](specific_epoch_function.png)
 #### 4.5. `/epochs/<epoch>/speed`
 
 - **Method**: GET
