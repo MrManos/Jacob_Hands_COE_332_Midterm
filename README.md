@@ -2,62 +2,126 @@
 
 ## Project Objective
 
-The goal of the ISS Tracker project is to develop a Flask web application that provides real-time tracking and analysis of the International Space Station (ISS). It achieves this by fetching live data from NASA's public repository, parsing the XML data, and calculating metrics such as the ISS's current speed and geographic position.
+Building off of homeworks 4 & 5, the objective of the project is to create a Flask-based application to track the real-time position, velcoity, and location of the International Space Station (ISS). The data is provided real-time through the NASA's public data repository that is then parsed, to output Flask app routes.
 
 ## Contents
 
-- **Dockerfile**: Setup for the Docker environment.
-- **docker-compose.yml**: Configuration for Docker Compose.
-- **iss_tracker.py**: The main script for ISS tracking and analysis.
-- **requirements.txt**: Lists the necessary Python packages.
-- **test/**: Folder containing unit tests.
-  - **test_iss_tracker.py**: Script for unit testing the main application.
-- **diagram.png**: Diagram illustrating the project's system architecture.
-- **README.md**: Documentation providing details and setup instructions for the project.
+- `Dockerfile`: Defines the environment for containerizing the Python script.
+- `docker-compose.yml`: Docker Compose configuration file.
+- `iss_tracker.py`: Main Python script for tracking and analyzing ISS data.
+- `requirements.txt`: Specifies the required Python packages.
+- `test/`: Directory containing unit tests.
+  - `test_iss_tracker.py`: Unit tests for testing the functionality of `iss_tracker.py`.
+- `diagram.png`: Software diagram representing components of the project.
+- `README.md`: Instructions and information about the project.
 
 ## Instructions
 
 ### 1. Accessing the Data
 
-ISS data can be accessed through NASA's public data repository. The provided URL directs to an XML file with the ISS's position and velocity information, available in the Mean of J2000 (J2K) frame and updated every four minutes across a span of 15 days. Link:
-- [ISS Trajectory Data on NASA Spot the Station](https://spotthestation.nasa.gov/trajectory_data.cfm)
-
+The ISS data is retrieved from NASA's public data repository. To access the data, you can use the following URL: [ISS Data](https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml). This URL provides an XML file containing the ISS coordinates and velocity information. In the file, ISS state vectors in the Mean of J2000 (J2K) reference frame are listed at four-minute intervals spanning a total length of 15 days.
 
 ### 2. Building the Container
 
-To containerize the ISS Tracker, follow these steps:
-1. Ensure Docker is installed on your machine.
-2. Use a terminal to navigate to the directory with the Dockerfile and Python scripts.
-3. Execute `docker-compose up -d` to build the Docker image and start the Flask app in the background.
-4. Confirm the container is running on port 5000 using `docker ps -a` and list all Docker images with `docker images`.
+To build the Docker container for the ISS Tracker, follow these steps:
 
-### 3. Running Unit Tests
+1. Make sure you have Docker installed on your system. If not, download and install Docker from [the official Docker website](https://docs.docker.com/get-docker/).
 
-To perform unit tests within the Docker container, use the bash command:
-`docker exec -it iss_tracker /bin/bash`
+2. Navigate to the directory containing the `Dockerfile` and the Python scripts (`iss_tracker.py` and `test_iss_tracker.py`) using the terminal or command prompt.
+
+3. Run the following command to build the Docker image and get the Flask app running in the background:
+
+   ```bash
+   docker-compose up -d
+   ```
+
+   This command builds the Docker image `iss_tracker` with the tag `latest` and runs it in the background.
+
+4. Wait for Docker to complete the build process. Use docker `docker ps -a` to ensure that the `iss_tracker` container is running on port 5000.
+
+The Flask app is now ready to use. You can confirm that it was built successfully by running `docker images` to list all available images on your system.
+
+### 3. Running Unit Tests on the Docker Container
+
+If you wish to run unit tests to ensure the functions in the script work, you can run the following command to access the container's shell:
+
+```bash
+docker exec -it iss_tracker /bin/bash
+```
+
+After the unit tests are done running, you can exit the container's bash shell by typing exit or pressing Ctrl+D.
 
 ### 4. Accessing the Routes
 
-The Flask application supports various routes for interacting with the ISS data:
+Once the Docker container is running, you can access various routes in the ISS Tracker app using `curl` commands. The routes below enable you to interact with different aspects of the ISS Tracker app and retrieve relevant information. Here are the available routes and their descriptions:
 
-- **GET `/now`**: Current epoch's speed and position.
-- **GET `/epochs`**: Access to the full dataset.
-- **GET `/epochs?limit=int&offset=int`**: Dataset access with pagination.
-- **GET `/epochs/<epoch>`**: Data for a specific epoch.
-- **GET `/epochs/<epoch>/speed`**: Speed at a given epoch.
-- **GET `/epochs/<epoch>/location`**: Geolocation data for an epoch. May return "Address Not Found" over oceans.
+#### 4.1. `/now`
 
+- **Method**: GET
+- **Description**: Returns information about the closest epoch to the current time, along with the instantaneous speed and geoposition.
 
-### 5. Free-up space
+#### 4.2. `/epochs`
 
-To remove the Docker container and free up resources, run bash command
-`docker-compose down`
- and verify removal with
-`docker ps -a`.
+- **Method**: GET
+- **Description**: Returns the entire dataset.
 
-## Interpretation of outputs
-The application's output provides insights into the ISS's location, speed, and trajectory, enabling users to track its movement in real time.
+#### 4.3. `/epochs?limit=int&offset=int`
+
+- **Method**: GET
+- **Description**: Returns a modified list of Epochs given query parameters `limit` and `offset`. It allows you to retrieve a subset of the data.
+
+#### 4.4. `/epochs/<epoch>`
+
+- **Method**: GET
+- **Description**: Returns state vectors for a specific Epoch from the data set. It provides information about the position and velocity at that particular epoch.
+
+#### 4.5. `/epochs/<epoch>/speed`
+
+- **Method**: GET
+- **Description**: Returns the instantaneous speed for a specific Epoch in the data set. It provides the magnitude of the velocity vector at the given epoch.
+
+#### 4.6. `/epochs/<epoch>/location`
+
+- **Method**: GET
+- **Description**: Returns latitude, longitude, altitude, and geoposition for a specific Epoch in the data set. Note that geoposition may return "Address Not Found". Oftentimes, this happens if the ISS is over an ocean at the specified epoch, as the GeoPy library does not return an address if that is the case.
+
+#### 4.7. `/comment`
+
+- **Method**: GET
+- **Description**: Returns the 'comment' list object from the ISS data.
+
+#### 4.8. `/header`
+
+- **Method**: GET
+- **Description**: Returns the 'header' dictionary object from the ISS data.
+
+#### 4.9. `/metadata`
+
+- **Method**: GET
+- **Description**: Returns the 'metadata' dictionary object from the ISS data.
+
+These routes provide comprehensive access to the ISS Tracker app's functionalities and data.
+
+### 5. Clean Up
+
+Do not forget to stop and remove the container once you are done interacting with the Flask microservice using:
+
+```bash
+docker-compose down
+```
+
+You can make sure the container has been stopped and removed by running:
+
+```bash
+docker ps -a
+```
+
+This process ensures resource efficiency and prevents conflicts in subsequent container executions.
+
+## Interpreting the Output
+
+The output of the ISS Tracker script provides information about the ISS's position and velocity at various epochs. It allows users to track the ISS's movement, analyze its speed, and understand its current state. The output can be interpreted to gain insights into the ISS's orbit and trajectory.
 
 ## Acknowledgments
-This project uses NASA's public data and some parts of the code, and this README file include contributions from ChatGPT by OpenAI for documentation and code comments. The geodetic calculations have been verified using an online tracker. Link:
-- [Track ISS on N2YO](https://www.n2yo.com/?s=90027)
+
+The ISS Tracker project utilizes data provided by NASA's public data repository. The README content, comments in the code, and unit test examples were created with the assistance of ChatGPT, an AI language model developed by OpenAI. The geodetic calculations were verfied by an [online tracker](https://www.n2yo.com/?s=90027).
