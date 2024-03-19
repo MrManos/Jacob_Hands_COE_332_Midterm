@@ -126,7 +126,7 @@ Once the Docker container is running, you can access various routes in the ISS T
 ![metadata](Images/metadata.png)
 These routes provide comprehensive access to the ISS Tracker app's functionalities and data.
 
-### 5. Clean Up
+### 5. Stopping the application
 
 Do not forget to stop and remove the container once you are done interacting with the Flask microservice using:
 
@@ -144,7 +144,9 @@ This process ensures resource efficiency and prevents conflicts in subsequent co
 
 ## Interpreting the Output
 
-The output of the ISS Tracker script provides information about the ISS's position and velocity at various epochs. It allows users to track the ISS's movement, analyze its speed, and understand its current state. The output can be interpreted to gain insights into the ISS's orbit and trajectory.
+Here is a table with an overarching view of each route and its purpose
+
+![table](Images/overarching.png)
 
 ## Acknowledgments
 
