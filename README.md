@@ -14,6 +14,7 @@ Building off of homeworks 4 & 5, the objective of the project is to create a Fla
   - `test_iss_tracker.py`: Unit tests for testing the functionality of `iss_tracker.py`.
 - `diagram.drawio.png`: Software diagram representing components of the project.
 - `README.md`: Instructions and information about the project.
+- `Images/`: Directory containing images used for the README.md.
 
 ## Instructions
 
@@ -21,7 +22,9 @@ Building off of homeworks 4 & 5, the objective of the project is to create a Fla
 
 The ISS data is retrieved from NASA's public data repository. To access the data, you can use the following URL: [ISS Data](https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml). This URL provides an XML file containing the ISS coordinates and velocity information. In the file, ISS state vectors in the Mean of J2000 (J2K) reference frame are listed at four-minute intervals spanning a total length of 15 days.
 
-### 2. Building the Container
+### 2. Building the Container or Running Directly 
+
+### 2.1 Building a Docker container
 
 To build the Docker container for the ISS Tracker, follow these steps:
 
@@ -40,6 +43,26 @@ To build the Docker container for the ISS Tracker, follow these steps:
 4. Wait for Docker to complete the build process. Use docker `docker ps -a` to ensure that the `iss_tracker` container is running on port 5000.
 
 The Flask app is now ready to use. You can confirm that it was built successfully by running `docker images` to list all available images on your system.
+
+### 2.1.1 Building Your Own Docker Container 
+
+To build your own container 
+```bash
+   docker build -t <your_username>/iss_tracker:<version> .
+   ```
+![docker build](Images/docker_build.png)
+Then 
+```bash
+docker run -it --rm -p 5000:5000 jetp104/iss_tracker:midterm
+```
+Your Docker container should be running if done correctly 
+![done](Images/done.png)
+### 2.2 Running Application Directly
+
+To run the application directly type in the terminal 
+ ```bash
+   flask --app iss_tracker --debug run
+   ```
 
 ### 3. Running Unit Tests on the Docker Container
 

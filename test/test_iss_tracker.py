@@ -29,9 +29,9 @@ def sample_xml_data():
             <X units="km">150.0</X>
             <Y units="km">250.0</Y>
             <Z units="km">350.0</Z>
-            <X_DOT units="km/s">1.5</X_DOT>
-            <Y_DOT units="km/s">2.5</Y_DOT>
-            <Z_DOT units="km/s">3.5</Z_DOT>
+            <X_DOT units="km/s">1</X_DOT>
+            <Y_DOT units="km/s">1</Y_DOT>
+            <Z_DOT units="km/s">1</Z_DOT>
           </stateVector>
         </data>
       </segment>
