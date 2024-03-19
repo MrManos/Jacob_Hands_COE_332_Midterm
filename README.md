@@ -149,4 +149,4 @@ The outputs range from speed or position, to the altitude, latitude, and longitu
 
 ## Acknowledgments
 
-The ISS Tracker project utilizes data provided by NASA's public data repository. The README content, comments in the code, and unit test examples were created with the assistance of ChatGPT, an AI language model developed by OpenAI. The geodetic calculations were verfied by an [online tracker](https://www.n2yo.com/?s=90027).
+ The README content, comments in the code, and unit test examples were created with the assistance of ChatGPT. The app rout `/now` was verfied using an [online tracker](https://www.n2yo.com/?s=90027).
