@@ -60,7 +60,7 @@ Once the Docker container is running, you can access various routes in the ISS T
 - **Method**: GET
 - **Description**: Returns information about the closest epoch to the current time, along with the instantaneous speed and geoposition.
 
-![image](now_function.png)
+![image](Images/now_function.png)
 #### 4.2. `/epochs`
 
 - **Method**: GET
@@ -70,37 +70,37 @@ Once the Docker container is running, you can access various routes in the ISS T
 
 - **Method**: GET
 - **Description**: Returns a modified list of Epochs given query parameters `limit` and `offset`. It allows you to retrieve a subset of the data.
-![epochs](epochs.png)
+![epochs](Images/epochs.png)
 #### 4.4. `/epochs/<epoch>`
 
 - **Method**: GET
 - **Description**: Returns state vectors for a specific Epoch from the data set. It provides information about the position and velocity at that particular epoch.
-![specific_epoch](specific_epoch_function.png)
+![specific_epoch](Images/specific_epoch_function.png)
 #### 4.5. `/epochs/<epoch>/speed`
 
 - **Method**: GET
 - **Description**: Returns the instantaneous speed for a specific Epoch in the data set. It provides the magnitude of the velocity vector at the given epoch.
-
+![speed](Images/speed_function.png)
 #### 4.6. `/epochs/<epoch>/location`
 
 - **Method**: GET
 - **Description**: Returns latitude, longitude, altitude, and geoposition for a specific Epoch in the data set. Note that geoposition may return "Address Not Found". Oftentimes, this happens if the ISS is over an ocean at the specified epoch, as the GeoPy library does not return an address if that is the case.
-
+![local](Images/location_function.png)
 #### 4.7. `/comment`
 
 - **Method**: GET
 - **Description**: Returns the 'comment' list object from the ISS data.
-
+![comment](Images/comment_function.png)
 #### 4.8. `/header`
 
 - **Method**: GET
 - **Description**: Returns the 'header' dictionary object from the ISS data.
-
+![header](Images/header.png)
 #### 4.9. `/metadata`
 
 - **Method**: GET
 - **Description**: Returns the 'metadata' dictionary object from the ISS data.
-
+![metadata](Images/metadata.png)
 These routes provide comprehensive access to the ISS Tracker app's functionalities and data.
 
 ### 5. Clean Up
