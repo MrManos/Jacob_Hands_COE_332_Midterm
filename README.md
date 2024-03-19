@@ -30,7 +30,7 @@ To build the Docker container for the ISS Tracker, follow these steps:
 
 1. Make sure you have Docker installed on your system. If not, download and install Docker from [the official Docker website](https://docs.docker.com/get-docker/).
 
-2. Navigate to the directory containing the `Dockerfile` and the Python scripts (`iss_tracker.py` and `test_iss_tracker.py`) using the terminal or command prompt.
+2. Navigate to the directory containing the `Dockerfile` and the Python scripts (`iss_tracker.py` and `test_iss_tracker.py`) using the terminal or command prompt command `cd`.
 
 3. Run the following command to build the Docker image and get the Flask app running in the background:
 
@@ -53,7 +53,7 @@ To build your own container
 ![docker build](Images/docker_build.png)
 Then 
 ```bash
-docker run -it --rm -p 5000:5000 jetp104/iss_tracker:midterm
+docker run -it --rm -p 5000:5000 <your_username>/iss_tracker:<version>
 ```
 Your Docker container should be running if done correctly 
 ![done](Images/done.png)
@@ -145,7 +145,7 @@ This process ensures resource efficiency and prevents conflicts in subsequent co
 
 ## Interpreting the Output
 
-The outputs range from speed or position, to the altitude, latitude, and longitude. The outputs from the app route are labeled and allow for understandability. 
+The outputs range from speed or position, to the altitude, latitude, and longitude. The outputs from the app route are labeled and allow for understandability about the ISS tajectory. 
 
 ## Acknowledgments
 
