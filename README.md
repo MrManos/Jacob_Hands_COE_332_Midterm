@@ -12,7 +12,7 @@ Building off of homeworks 4 & 5, the objective of the project is to create a Fla
 - `requirements.txt`: Specifies the required Python packages.
 - `test/`: Directory containing unit tests.
   - `test_iss_tracker.py`: Unit tests for testing the functionality of `iss_tracker.py`.
-- `diagram.png`: Software diagram representing components of the project.
+- `diagram.drawio.png`: Software diagram representing components of the project.
 - `README.md`: Instructions and information about the project.
 
 ## Instructions
