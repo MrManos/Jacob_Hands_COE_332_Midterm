@@ -60,6 +60,7 @@ Once the Docker container is running, you can access various routes in the ISS T
 - **Method**: GET
 - **Description**: Returns information about the closest epoch to the current time, along with the instantaneous speed and geoposition.
 
+!(now)[now_function.png]
 #### 4.2. `/epochs`
 
 - **Method**: GET
