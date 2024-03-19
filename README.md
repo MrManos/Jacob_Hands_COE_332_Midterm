@@ -78,6 +78,7 @@ After the unit tests are done running, you can exit the container's bash shell b
 
 Once the Docker container is running, you can access various routes in the ISS Tracker app using `curl` commands. The routes below enable you to interact with different aspects of the ISS Tracker app and retrieve relevant information. Here are the available routes and their descriptions:
 
+![table](Images/overarching.png)
 #### 4.1. `/now`
 
 - **Method**: GET
@@ -144,9 +145,7 @@ This process ensures resource efficiency and prevents conflicts in subsequent co
 
 ## Interpreting the Output
 
-Here is a table with an overarching view of each route and its purpose
-
-![table](Images/overarching.png)
+The outputs range from speed or position, to the altitude, latitude, and longitude. The outputs from the app route are labeled and allow for understandability. 
 
 ## Acknowledgments
 
